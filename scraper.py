@@ -23,22 +23,14 @@ WEEE_COOKIE_JSON = os.environ.get("WEEE_COOKIE")
 TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_SID")
 TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_TOKEN")
 
+# Personal Info Secrets (Portfolio Safe)
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
+RECEIVER_EMAILS = [email.strip() for email in os.environ.get("RECEIVER_EMAILS", "").split(",")]
+TWILIO_WHATSAPP_SENDER = os.environ.get("TWILIO_SENDER")
+WHATSAPP_RECEIVERS = [num.strip() for num in os.environ.get("WHATSAPP_RECEIVERS", "").split(",")]
+
 # --- 2. CONFIGURATION ---
 URL = "https://www.sayweee.com/en"
-
-# Email Details
-SENDER_EMAIL = "iknalos.luhar@gmail.com"
-RECEIVER_EMAILS = [
-    "iknalos.luhar@gmail.com",
-    "asolanki.work@gmail.com"
-]
-
-# Twilio WhatsApp Details
-TWILIO_WHATSAPP_SENDER = 'whatsapp:+14155238886' 
-WHATSAPP_RECEIVERS = [
-    'whatsapp:+16179554893', 
-    'whatsapp:+17814064090'  
-]
 
 def setup_browser():
     print("Starting up the invisible browser...")
