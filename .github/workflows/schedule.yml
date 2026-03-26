@@ -2,7 +2,7 @@ name: Daily Grocery Scraper
 
 on:
   schedule:
-    - cron: '0 5 * * *' # Runs at 16:00 UTC (12:00 PM EST) every day
+    - cron: '0 16 * * *' # Runs at 16:00 UTC (12:00 PM EST) every day
   workflow_dispatch: # Allows you to click a button to run it manually
 
 jobs:
