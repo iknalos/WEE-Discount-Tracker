@@ -31,4 +31,8 @@ jobs:
           WEEE_COOKIE: ${{ secrets.WEEE_COOKIE }}
           TWILIO_SID: ${{ secrets.TWILIO_SID }}
           TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          RECEIVER_EMAILS: ${{ secrets.RECEIVER_EMAILS }}
+          TWILIO_SENDER: ${{ secrets.TWILIO_SENDER }}
+          WHATSAPP_RECEIVERS: ${{ secrets.WHATSAPP_RECEIVERS }}
         run: python scraper.py
