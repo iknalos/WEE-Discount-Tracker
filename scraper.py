@@ -234,6 +234,13 @@ def check_discounts():
             send_whatsapp(discounted_items)
         else:
             print("No discounts found. Adjust search terms or check if page structure changed.")
+            body_text = " ".join(soup.get_text(separator=' ').split())
+            lower = body_text.lower()
+            print(f"DIAG title={driver.title!r} url={driver.current_url!r}")
+            print(f"DIAG product_name_elements={len(product_names)} "
+                  f"has_sign_in={('sign in' in lower) or ('log in' in lower)} "
+                  f"has_account={('my account' in lower) or ('my orders' in lower)}")
+            print(f"DIAG body_snippet={body_text[:600]!r}")
 
     finally:
         driver.quit()
