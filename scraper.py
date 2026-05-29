@@ -98,13 +98,23 @@ def check_cookie_expiry():
         return
     try:
         cookies = json.loads(WEEE_COOKIE_JSON)
-        expiries = [c.get('expirationDate') for c in cookies if c.get('expirationDate')]
-        if not expiries:
+        now = datetime.datetime.now().timestamp()
+        per_cookie = [(c.get('name', '?'), (c['expirationDate'] - now) / 86400)
+                      for c in cookies if c.get('expirationDate')]
+        if not per_cookie:
             print("DIAG cookie_expiry: no expirationDate fields present, skipping check")
             return
-        soonest = min(expiries)
-        days_left = (soonest - datetime.datetime.now().timestamp()) / 86400
-        print(f"DIAG cookie_expiry: soonest cookie expires in {days_left:.1f} days")
+        # Short-lived session/CSRF/analytics cookies (< 1 day) don't drive Weee's auth
+        # lifetime - the long-lived auth cookie is what actually controls login. Filter
+        # them out so the warning targets the cookie that will actually break the scraper.
+        persistent_days = [d for _, d in per_cookie if d >= 1]
+        soonest_summary = ", ".join(f"{n}={d:.1f}d" for n, d in sorted(per_cookie, key=lambda x: x[1])[:5])
+        print(f"DIAG cookie_expiry: 5 soonest cookies: {soonest_summary}")
+        if not persistent_days:
+            print("DIAG cookie_expiry: no persistent (>=1d) cookies found, no warning")
+            return
+        days_left = min(persistent_days)
+        print(f"DIAG cookie_expiry: soonest persistent cookie expires in {days_left:.1f} days")
         if days_left < COOKIE_WARN_DAYS:
             send_cookie_warning(days_left)
     except Exception as e:
