@@ -35,4 +35,5 @@ jobs:
           RECEIVER_EMAILS: ${{ secrets.RECEIVER_EMAILS }}
           TWILIO_SENDER: ${{ secrets.TWILIO_SENDER }}
           WHATSAPP_RECEIVERS: ${{ secrets.WHATSAPP_RECEIVERS }}
+          OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
         run: python scraper.py

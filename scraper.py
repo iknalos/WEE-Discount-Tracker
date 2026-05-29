@@ -4,6 +4,7 @@ import json
 import re
 import warnings
 import smtplib
+import datetime
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -28,6 +29,8 @@ SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
 RECEIVER_EMAILS = [email.strip() for email in os.environ.get("RECEIVER_EMAILS", "").split(",")]
 TWILIO_WHATSAPP_SENDER = os.environ.get("TWILIO_SENDER")
 WHATSAPP_RECEIVERS = [num.strip() for num in os.environ.get("WHATSAPP_RECEIVERS", "").split(",")]
+OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "").strip()  # cookie-expiry alerts go here only
+COOKIE_WARN_DAYS = 3
 
 # --- 2. CONFIGURATION ---
 URL = "https://www.sayweee.com/en"
@@ -90,6 +93,45 @@ def send_email(html_body, df=None):
     except Exception as e:
         print(f"Failed to send email: {e}")
 
+def check_cookie_expiry():
+    if not WEEE_COOKIE_JSON:
+        return
+    try:
+        cookies = json.loads(WEEE_COOKIE_JSON)
+        expiries = [c.get('expirationDate') for c in cookies if c.get('expirationDate')]
+        if not expiries:
+            print("DIAG cookie_expiry: no expirationDate fields present, skipping check")
+            return
+        soonest = min(expiries)
+        days_left = (soonest - datetime.datetime.now().timestamp()) / 86400
+        print(f"DIAG cookie_expiry: soonest cookie expires in {days_left:.1f} days")
+        if days_left < COOKIE_WARN_DAYS:
+            send_cookie_warning(days_left)
+    except Exception as e:
+        print(f"DIAG cookie_expiry: check failed: {e}")
+
+def send_cookie_warning(days_left):
+    if not OWNER_EMAIL:
+        print("Cookie expiring soon but OWNER_EMAIL not set, no warning sent.")
+        return
+    msg = MIMEMultipart()
+    msg['Subject'] = f"WEEE_COOKIE expires in {days_left:.1f} days - refresh soon"
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = OWNER_EMAIL
+    body = (f"Heads up: your WEEE_COOKIE secret expires in about {days_left:.1f} day(s).\n\n"
+            "To avoid breaking the daily scraper:\n"
+            "  1. Log into sayweee.com in your browser\n"
+            "  2. Export the cookies as JSON\n"
+            "  3. Update the WEEE_COOKIE secret in the repo\n")
+    msg.attach(MIMEText(body, 'plain'))
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, [OWNER_EMAIL], msg.as_string())
+        print(f"Cookie expiry warning sent to {OWNER_EMAIL}")
+    except Exception as e:
+        print(f"Failed to send cookie expiry warning: {e}")
+
 def load_cookies(driver):
     print("Attempting to load session cookies from GitHub Secrets...")
     try:
@@ -116,6 +158,7 @@ def load_cookies(driver):
         print(f"Error loading cookies: {e}")
 
 def check_discounts():
+    check_cookie_expiry()
     driver = setup_browser()
 
     try:
